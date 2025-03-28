@@ -70,7 +70,14 @@ class FetchAnalyticsData extends Command
 
             $this->info("Successfully fetched and stored data from {$platform}");
         } catch (\Exception $e) {
+            // Log the error
+            \Log::error("Analytics fetch failed for {$platform}: " . $e->getMessage());
             $this->error("Error fetching data from {$platform}: {$e->getMessage()}");
+
+            // Notify admin if needed
+            if (config('analytics.notify_on_failure')) {
+                // Implement notification logic
+            }
         }
     }
 }

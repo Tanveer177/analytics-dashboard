@@ -34,4 +34,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Add this temporary route for testing
+Route::get('/test-data', function() {
+    $count = \App\Models\AnalyticsData::count();
+    $first = \App\Models\AnalyticsData::first();
+    $platforms = \App\Models\AnalyticsData::distinct('platform')->pluck('platform');
+    
+    return [
+        'total_records' => $count,
+        'first_record' => $first,
+        'platforms' => $platforms
+    ];
+});
+
 require __DIR__ . '/auth.php';

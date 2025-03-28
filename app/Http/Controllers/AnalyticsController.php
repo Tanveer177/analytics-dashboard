@@ -29,38 +29,56 @@ class AnalyticsController extends Controller
         ];
 
         // Generate labels for the last 30 days
-        for ($date = $startDate; $date <= $endDate; $date->addDay()) {
+        $dateRange = [];
+        for ($date = clone $startDate; $date <= $endDate; $date->addDay()) {
+            $dateRange[] = $date->format('Y-m-d');
             $chartData['labels'][] = $date->format('M d');
         }
 
         // Prepare data for each platform
         foreach ($analyticsData as $platform => $records) {
+            $recordsByDate = $records->keyBy(function ($record) {
+                return $record->date->format('Y-m-d');
+            });
+
+            $platformData = array_map(function ($date) use ($recordsByDate) {
+                return $recordsByDate[$date]->total_visits ?? 0;
+            }, $dateRange);
+
             $chartData['datasets']['total_visits'][] = [
                 'label' => ucwords(str_replace('_', ' ', $platform)),
-                'data' => $records->pluck('total_visits')->toArray(),
+                'data' => $platformData,
                 'borderColor' => $this->getPlatformColor($platform),
                 'fill' => false,
             ];
+
+            $platformData = array_map(function ($date) use ($recordsByDate) {
+                return $recordsByDate[$date]->unique_visitors ?? 0;
+            }, $dateRange);
 
             $chartData['datasets']['unique_visitors'][] = [
                 'label' => ucwords(str_replace('_', ' ', $platform)),
-                'data' => $records->pluck('unique_visitors')->toArray(),
+                'data' => $platformData,
                 'borderColor' => $this->getPlatformColor($platform),
                 'fill' => false,
             ];
 
+            $platformData = array_map(function ($date) use ($recordsByDate) {
+                return $recordsByDate[$date]->page_views ?? 0;
+            }, $dateRange);
+
             $chartData['datasets']['page_views'][] = [
                 'label' => ucwords(str_replace('_', ' ', $platform)),
-                'data' => $records->pluck('page_views')->toArray(),
+                'data' => $platformData,
                 'borderColor' => $this->getPlatformColor($platform),
                 'fill' => false,
             ];
         }
 
         // Get latest data for tables
-        $latestData = AnalyticsData::where('date', $endDate->format('Y-m-d'))->get();
+        $latestData = AnalyticsData::whereDate('date', $endDate->format('Y-m-d'))->get();
 
-        return view('dashboard', compact('analyticsData', 'chartData', 'latestData'));
+        return view('analytics.dashboard', compact('chartData', 'latestData'));
     }
 
     public function filter(Request $request)

@@ -12,7 +12,7 @@
                     <!-- Charts Section -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <!-- Total Visits Chart -->
-                        <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="p-6 rounded-lg shadow">
                             <h3 class="text-lg font-semibold mb-4">Total Visits</h3>
                             <canvas id="totalVisitsChart"></canvas>
                         </div>
@@ -78,55 +78,30 @@
     <script>
         const chartData = @json($chartData);
 
-        // Total Visits Chart
-        new Chart(document.getElementById('totalVisitsChart'), {
-            type: 'line'
-            , data: {
-                labels: chartData.labels
-                , datasets: chartData.datasets.total_visits
-            }
-            , options: {
-                responsive: true
-                , plugins: {
-                    legend: {
-                        position: 'top'
-                    , }
+        // Create charts for each metric
+        const createChart = (elementId, dataset, label) => {
+            const ctx = document.getElementById(elementId).getContext('2d');
+            new Chart(ctx, {
+                type: 'line'
+                , data: {
+                    labels: chartData.labels
+                    , datasets: chartData.datasets[dataset]
                 }
-            }
-        });
+                , options: {
+                    responsive: true
+                    , title: {
+                        display: true
+                        , text: label
+                    }
+                }
+            });
+        };
 
-        // Unique Visitors Chart
-        new Chart(document.getElementById('uniqueVisitorsChart'), {
-            type: 'line'
-            , data: {
-                labels: chartData.labels
-                , datasets: chartData.datasets.unique_visitors
-            }
-            , options: {
-                responsive: true
-                , plugins: {
-                    legend: {
-                        position: 'top'
-                    , }
-                }
-            }
-        });
-
-        // Page Views Chart
-        new Chart(document.getElementById('pageViewsChart'), {
-            type: 'line'
-            , data: {
-                labels: chartData.labels
-                , datasets: chartData.datasets.page_views
-            }
-            , options: {
-                responsive: true
-                , plugins: {
-                    legend: {
-                        position: 'top'
-                    , }
-                }
-            }
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            createChart('totalVisitsChart', 'total_visits', 'Total Visits');
+            createChart('uniqueVisitorsChart', 'unique_visitors', 'Unique Visitors');
+            createChart('pageViewsChart', 'page_views', 'Page Views');
         });
 
     </script>
