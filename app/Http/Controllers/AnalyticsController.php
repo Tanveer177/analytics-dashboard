@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AnalyticsData;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AnalyticsController extends Controller
 {
@@ -14,9 +15,16 @@ class AnalyticsController extends Controller
         $startDate = Carbon::now()->subDays(30);
         $endDate = Carbon::now();
 
+        // Debug the date range
+        Log::info('Date range:', ['start' => $startDate->format('Y-m-d'), 'end' => $endDate->format('Y-m-d')]);
+
         $analyticsData = AnalyticsData::filterByDateRange($startDate, $endDate)
+            ->orderBy('date')
             ->get()
             ->groupBy('platform');
+
+        // Debug the raw data
+        Log::info('Analytics data count:', ['count' => $analyticsData->count()]);
 
         // Prepare data for charts
         $chartData = [
@@ -30,10 +38,16 @@ class AnalyticsController extends Controller
 
         // Generate labels for the last 30 days
         $dateRange = [];
-        for ($date = clone $startDate; $date <= $endDate; $date->addDay()) {
-            $dateRange[] = $date->format('Y-m-d');
-            $chartData['labels'][] = $date->format('M d');
+        $currentDate = clone $startDate;
+        while ($currentDate <= $endDate) {
+            $dateStr = $currentDate->format('Y-m-d');
+            $dateRange[] = $dateStr;
+            $chartData['labels'][] = $currentDate->format('M d');
+            $currentDate->addDay();
         }
+
+        // Debug date range
+        Log::info('Date range array:', ['dates' => $dateRange]);
 
         // Prepare data for each platform
         foreach ($analyticsData as $platform => $records) {
@@ -41,39 +55,49 @@ class AnalyticsController extends Controller
                 return $record->date->format('Y-m-d');
             });
 
-            $platformData = array_map(function ($date) use ($recordsByDate) {
+            // Debug platform data
+            Log::info("Platform data for {$platform}:", ['records_count' => $records->count()]);
+
+            $totalVisitsData = array_map(function ($date) use ($recordsByDate) {
                 return $recordsByDate[$date]->total_visits ?? 0;
             }, $dateRange);
 
             $chartData['datasets']['total_visits'][] = [
                 'label' => ucwords(str_replace('_', ' ', $platform)),
-                'data' => $platformData,
+                'data' => $totalVisitsData,
                 'borderColor' => $this->getPlatformColor($platform),
                 'fill' => false,
             ];
 
-            $platformData = array_map(function ($date) use ($recordsByDate) {
+            $uniqueVisitorsData = array_map(function ($date) use ($recordsByDate) {
                 return $recordsByDate[$date]->unique_visitors ?? 0;
             }, $dateRange);
 
             $chartData['datasets']['unique_visitors'][] = [
                 'label' => ucwords(str_replace('_', ' ', $platform)),
-                'data' => $platformData,
+                'data' => $uniqueVisitorsData,
                 'borderColor' => $this->getPlatformColor($platform),
                 'fill' => false,
             ];
 
-            $platformData = array_map(function ($date) use ($recordsByDate) {
+            $pageViewsData = array_map(function ($date) use ($recordsByDate) {
                 return $recordsByDate[$date]->page_views ?? 0;
             }, $dateRange);
 
             $chartData['datasets']['page_views'][] = [
                 'label' => ucwords(str_replace('_', ' ', $platform)),
-                'data' => $platformData,
+                'data' => $pageViewsData,
                 'borderColor' => $this->getPlatformColor($platform),
                 'fill' => false,
             ];
         }
+
+        // Debug final chart data
+        Log::info('Chart data structure:', [
+            'labels_count' => count($chartData['labels']),
+            'total_visits_datasets' => count($chartData['datasets']['total_visits']),
+            'sample_data' => array_slice($chartData['datasets']['total_visits'], 0, 1)
+        ]);
 
         // Get latest data for tables
         $latestData = AnalyticsData::whereDate('date', $endDate->format('Y-m-d'))->get();

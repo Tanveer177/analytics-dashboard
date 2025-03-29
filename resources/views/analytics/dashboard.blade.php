@@ -12,21 +12,27 @@
                     <!-- Charts Section -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <!-- Total Visits Chart -->
-                        <div class="p-6 rounded-lg shadow">
+                        <div class="p-6 rounded-lg shadow bg-white">
                             <h3 class="text-lg font-semibold mb-4">Total Visits</h3>
-                            <canvas id="totalVisitsChart"></canvas>
+                            <div style="height: 300px;">
+                                <canvas id="totalVisitsChart"></canvas>
+                            </div>
                         </div>
 
                         <!-- Unique Visitors Chart -->
-                        <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="p-6 rounded-lg shadow bg-white">
                             <h3 class="text-lg font-semibold mb-4">Unique Visitors</h3>
-                            <canvas id="uniqueVisitorsChart"></canvas>
+                            <div style="height: 300px;">
+                                <canvas id="uniqueVisitorsChart"></canvas>
+                            </div>
                         </div>
 
                         <!-- Page Views Chart -->
-                        <div class="bg-white p-6 rounded-lg shadow">
+                        <div class="p-6 rounded-lg shadow bg-white">
                             <h3 class="text-lg font-semibold mb-4">Page Views</h3>
-                            <canvas id="pageViewsChart"></canvas>
+                            <div style="height: 300px;">
+                                <canvas id="pageViewsChart"></canvas>
+                            </div>
                         </div>
                     </div>
 
@@ -78,20 +84,92 @@
     <script>
         const chartData = @json($chartData);
 
+        // Debug data
+        console.log('Chart Data:', chartData);
+        console.log('Labels:', chartData.labels);
+        console.log('Total Visits Data:', chartData.datasets.total_visits);
+
         // Create charts for each metric
         const createChart = (elementId, dataset, label) => {
+            console.log(`Creating chart for ${elementId} with dataset:`, chartData.datasets[dataset]);
             const ctx = document.getElementById(elementId).getContext('2d');
             new Chart(ctx, {
                 type: 'line'
                 , data: {
                     labels: chartData.labels
-                    , datasets: chartData.datasets[dataset]
+                    , datasets: chartData.datasets[dataset].map(dataset => ({
+                        ...dataset
+                        , tension: 0.4
+                        , borderWidth: 2
+                        , pointRadius: 3
+                        , pointHoverRadius: 5
+                        , backgroundColor: dataset.borderColor.replace(')', ', 0.1)')
+                    , }))
                 }
                 , options: {
                     responsive: true
-                    , title: {
-                        display: true
-                        , text: label
+                    , maintainAspectRatio: false
+                    , plugins: {
+                        title: {
+                            display: true
+                            , text: label
+                            , font: {
+                                size: 16
+                                , weight: 'bold'
+                            }
+                            , padding: {
+                                top: 10
+                                , bottom: 10
+                            }
+                        }
+                        , legend: {
+                            position: 'top'
+                            , labels: {
+                                padding: 20
+                                , usePointStyle: true
+                                , pointStyle: 'circle'
+                            }
+                        }
+                        , tooltip: {
+                            mode: 'index'
+                            , intersect: false
+                            , backgroundColor: 'rgba(255, 255, 255, 0.9)'
+                            , titleColor: '#000'
+                            , bodyColor: '#000'
+                            , borderColor: '#ddd'
+                            , borderWidth: 1
+                            , padding: 10
+                            , displayColors: true
+                            , callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toLocaleString()} visits`;
+                                }
+                            }
+                        }
+                    }
+                    , scales: {
+                        y: {
+                            beginAtZero: true
+                            , grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                                , drawBorder: false
+                            }
+                            , ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                        , x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                    , interaction: {
+                        mode: 'nearest'
+                        , axis: 'x'
+                        , intersect: false
                     }
                 }
             });
@@ -99,9 +177,13 @@
 
         // Initialize charts
         document.addEventListener('DOMContentLoaded', function() {
-            createChart('totalVisitsChart', 'total_visits', 'Total Visits');
-            createChart('uniqueVisitorsChart', 'unique_visitors', 'Unique Visitors');
-            createChart('pageViewsChart', 'page_views', 'Page Views');
+            try {
+                createChart('totalVisitsChart', 'total_visits', 'Total Visits');
+                createChart('uniqueVisitorsChart', 'unique_visitors', 'Unique Visitors');
+                createChart('pageViewsChart', 'page_views', 'Page Views');
+            } catch (error) {
+                console.error('Error creating charts:', error);
+            }
         });
 
     </script>

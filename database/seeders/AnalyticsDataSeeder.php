@@ -17,44 +17,34 @@ class AnalyticsDataSeeder extends Seeder
         AnalyticsData::truncate();
 
         $platforms = ['google_analytics', 'microsoft_clarity', 'facebook', 'instagram', 'snapchat'];
+        $startDate = Carbon::now()->subDays(30);
+        $endDate = Carbon::now();
 
-        // Set correct date range (last 30 days until yesterday)
-        $endDate = Carbon::yesterday();
-        $startDate = Carbon::yesterday()->subDays(30);
-
-        $date = clone $startDate;
-        while ($date <= $endDate) {
+        for ($date = clone $startDate; $date <= $endDate; $date->addDay()) {
             foreach ($platforms as $platform) {
-                // Base metrics
-                $totalVisits = rand(100, 1000);
-                $uniqueVisitors = rand(50, $totalVisits);
-                $pageViews = rand($totalVisits, $totalVisits * 3);
+                // Generate random numbers for metrics
+                $profileVisits = rand(50, 500);
+                $postVisits = rand(20, 200);
+                $totalVisits = $profileVisits + $postVisits;
+                $uniqueVisitors = rand(30, 300);
+                $pageViews = rand(100, 1000);
 
-                // Platform-specific adjustments
-                $multiplier = $this->getPlatformMultiplier($platform);
-                $totalVisits = (int)($totalVisits * $multiplier);
-                $uniqueVisitors = (int)($uniqueVisitors * $multiplier);
-
-                AnalyticsData::updateOrCreate(
-                    [
-                        'platform' => $platform,
-                        'date' => $date->format('Y-m-d'),
-                    ],
-                    [
-                        'profile_visits' => (int)($totalVisits * rand(20, 40) / 100),
-                        'post_visits' => (int)($totalVisits * rand(30, 50) / 100),
-                        'total_visits' => $totalVisits,
-                        'unique_visitors' => $uniqueVisitors,
-                        'page_views' => $pageViews,
-                        'additional_metrics' => [
-                            'bounce_rate' => rand(20, 80),
-                            'avg_session_duration' => rand(30, 300),
-                            'conversion_rate' => rand(1, 10),
-                        ],
-                    ]
-                );
+                // Create analytics data record
+                AnalyticsData::create([
+                    'platform' => $platform,
+                    'date' => $date->format('Y-m-d'),
+                    'profile_visits' => $profileVisits,
+                    'post_visits' => $postVisits,
+                    'total_visits' => $totalVisits,
+                    'unique_visitors' => $uniqueVisitors,
+                    'page_views' => $pageViews,
+                    'additional_metrics' => json_encode([
+                        'bounce_rate' => rand(20, 80),
+                        'avg_session_duration' => rand(1, 30),
+                        'conversion_rate' => rand(1, 10),
+                    ]),
+                ]);
             }
-            $date->addDay();
         }
     }
 
