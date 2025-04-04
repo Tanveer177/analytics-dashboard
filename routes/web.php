@@ -19,27 +19,25 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', [AnalyticsController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
-
-// Analytics Routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/analytics', [AnalyticsController::class, 'dashboard'])->name('analytics.dashboard');
-    Route::get('/analytics/social', [AnalyticsController::class, 'social'])->name('analytics.social');
-    Route::get('/analytics/filter', [AnalyticsController::class, 'filter'])->name('analytics.filter');
-});
+    // Dashboard route
+    Route::get('/dashboard', [AnalyticsController::class, 'dashboard'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+    // Social Media Analytics route
+    Route::get('/social-media', [AnalyticsController::class, 'socialMedia'])->name('social.media');
+
+    // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 // Add this temporary route for testing
-Route::get('/test-data', function() {
+Route::get('/test-data', function () {
     $count = \App\Models\AnalyticsData::count();
     $first = \App\Models\AnalyticsData::first();
     $platforms = \App\Models\AnalyticsData::distinct('platform')->pluck('platform');
-    
+
     return [
         'total_records' => $count,
         'first_record' => $first,

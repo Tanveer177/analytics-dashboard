@@ -15,10 +15,7 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('analytics.dashboard')" :active="request()->routeIs('analytics.dashboard')">
-                        {{ __('Analytics') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('analytics.social')" :active="request()->routeIs('analytics.social')">
+                    <x-nav-link :href="route('social.media')" :active="request()->routeIs('social.media')">
                         {{ __('Social Media') }}
                     </x-nav-link>
                 </div>
@@ -75,10 +72,7 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('analytics.dashboard')" :active="request()->routeIs('analytics.dashboard')">
-                {{ __('Analytics') }}
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('analytics.social')" :active="request()->routeIs('analytics.social')">
+            <x-responsive-nav-link :href="route('social.media')" :active="request()->routeIs('social.media')">
                 {{ __('Social Media') }}
             </x-responsive-nav-link>
         </div>
